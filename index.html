@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Inventario de Medicamentos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="https://res.cloudinary.com/dqqeavica/image/upload/v1759697569/Jhonny_tvexdy.png">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<style>
+/* ... TODO TU CSS IGUAL ... */
+</style>
+</head>
+
+<body>
+<div id="loader" class="loader hidden" aria-live="polite" aria-busy="true">
+  <div class="spinner-ios" role="status" aria-label="Cargando">
+    <i></i><i></i><i></i><i></i><i></i><i></i>
+    <i></i><i></i><i></i><i></i><i></i><i></i>
+  </div>
+</div>
+
+<div class="container">
+  <section id="view-main" class="view active">
+
+    <div class="card">
+      <h1 style="color:var(--primary); text-shadow:0 2px 2px #031732;">Inventario de Medicamentos</h1>
+
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-primary" id="btn-cargar">Cargar Stock</button>
+        <button id="btn-nuevo">Nuevo Medicamento</button>
+      </div>
+
+      <label style="margin-top:14px;">Usuario (para movimientos)</label>
+      <input id="usuario" type="text" placeholder="Ej:HARRY POTTER" value="BOTHEART" />
+
+      <label>Buscar</label>
+      <input id="q" type="text" placeholder="Nombre / presentación / ID..." />
+
+      <p class="muted center" style="margin:10px 0 0;">
+        Semáforo: <b>ROJO 0–2</b> / <b>NARANJA 3–5</b> / <b>AMARILLO 6–15</b> / <b>VERDE >15</b>
+      </p>
+    </div>
+
+    <div class="list" id="list"></div>
+
+  </section>
+</div>
+
+<script>
+/* ✅ PON AQUÍ TU URL REAL DEL WEB APP (/exec) */
+const API_BASE = 'https://script.google.com/macros/s/AKfycbyX5lyzwDKN6XdojWUcZdnWDfXFpf0OIATBkGsI-of0uijcAUwlQNlRXFfCWH360PkYjA/exec';
+
+/* Loader smart delay */
+const loader = document.getElementById('loader');
+let loadingCount = 0;
+let loaderTimer = null;
+function startLoading(){
+  loadingCount++;
+  if(loadingCount === 1){
+    loaderTimer = setTimeout(()=>{
+      loader.classList.remove('hidden');
+      loaderTimer = null;
+    }, 120);
+  }
+}
+function stopLoading(){
+  if(loadingCount === 0) return;
+  loadingCount--;
+  if(loadingCount === 0){
+    if(loaderTimer){ clearTimeout(loaderTimer); loaderTimer = null; }
+    loader.classList.add('hidden');
+  }
+}
+
+/* Sonidos */
+const SOUNDS = {
+  question: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_fail_ls2aif.mp3',
+  info: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Default_notification_pkp4wr.mp3',
+  success: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_success_t5aawh.mp3',
+  error: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
+  warning: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3'
+};
+function playSoundOnce(url){
+  try{ const a = new Audio(url); a.preload='auto'; a.play().catch(()=>{}); }catch(_){}
+}
+if(window.Swal && typeof Swal.fire === 'function'){
+  const __fire = Swal.fire.bind(Swal);
+  Swal.fire = function(options = {}, ...rest){
+    try{
+      const icon = options.icon || options.type;
+      if(icon && SOUNDS[icon]) playSoundOnce(SOUNDS[icon]);
+    }catch(_){}
+    return __fire(options, ...rest);
+  }
+}
+
+/* API */
+async function apiGet(action, params = {}){
+  startLoading();
+  try{
+    const url = new URL(API_BASE);
+    url.search = new URLSearchParams({ action, ...params }).toString();
+    const r = await fetch(url.toString(), { method:'GET' });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || 'Error');
+    return j.data;
+  } finally { stopLoading(); }
+}
+
+async function apiPost(action, body = {}){
+  startLoading();
+  try{
+    const url = API_BASE + '?action=' + encodeURIComponent(action);
+    const r = await fetch(url, {
+      method:'POST',
+      headers: { 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify(body)
+    });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error || 'Error');
+    return j.data;
+  } finally { stopLoading(); }
+}
+
+/* UI */
+let STOCK_CACHE = [];
+
+function badgeClass(estado){
+  const e = String(estado||'').toLowerCase();
+  if(e.includes('verde')) return 'verde';
+  if(e.includes('amarillo')) return 'amarillo';
+  if(e.includes('naranja')) return 'naranja';
+  return 'rojo';
+}
+
+function render(items){
+  const wrap = document.getElementById('list');
+  wrap.innerHTML = '';
+
+  if(!items.length){
+    const p = document.createElement('p');
+    p.className = 'muted center';
+    p.textContent = 'No hay datos.';
+    wrap.appendChild(p);
+    return;
+  }
+
+  for(const it of items){
+    const row = document.createElement('div');
+    row.className = 'item';
+
+    const main = document.createElement('div');
+    main.className = 'item-main';
+
+    const t = document.createElement('p');
+    t.className = 'item-title';
+    t.textContent = (it.nombre || '') + (it.presentacion ? (' — ' + it.presentacion) : '');
+
+    const sub = document.createElement('p');
+    sub.className = 'item-sub';
+    sub.textContent = `ID: ${it.id_med} | Stock: ${it.stock}`;
+
+    const meta = document.createElement('p');
+    meta.className = 'item-meta';
+    const dv = (it.dias_para_vencer === '' || it.dias_para_vencer === null) ? '—' : it.dias_para_vencer;
+    meta.textContent = `Vence: ${it.fecha_vencimiento || '—'} | Días: ${dv}`;
+
+    main.appendChild(t);
+    main.appendChild(sub);
+    main.appendChild(meta);
+
+    const badge = document.createElement('div');
+    badge.className = 'badge ' + badgeClass(it.estado_color);
+    badge.textContent = it.estado_color || 'ROJO';
+
+    const actions = document.createElement('div');
+    actions.className = 'item-actions';
+
+    const bIn = document.createElement('button');
+    bIn.className = 'btn-primary';
+    bIn.textContent = '+ Entrada';
+    bIn.addEventListener('click', ()=> movimiento(it.id_med, 'ENTRADA'));
+
+    const bOut = document.createElement('button');
+    bOut.textContent = '- Salida';
+    bOut.addEventListener('click', ()=> movimiento(it.id_med, 'SALIDA'));
+
+    actions.appendChild(bIn);
+    actions.appendChild(bOut);
+
+    row.appendChild(main);
+    row.appendChild(badge);
+    row.appendChild(actions);
+
+    wrap.appendChild(row);
+  }
+}
+
+async function loadStock(){
+  const q = (document.getElementById('q').value || '').trim();
+  const data = await apiGet('listStock', q ? { query:q } : {});
+  STOCK_CACHE = Array.isArray(data) ? data : [];
+  render(STOCK_CACHE);
+}
+
+function isDDMMYYYY(s){
+  return /^(\d{2})\/(\d{2})\/(\d{4})$/.test(String(s||'').trim());
+}
+
+async function nuevoMedicamento(){
+  const { value: v } = await Swal.fire({
+    icon:'info',
+    title:'Nuevo Medicamento',
+    html: `
+      <label style="text-align:left; font-weight:800; color:#007BFF; display:block; margin:0 0 6px;">Nombre</label>
+      <input id="m-nombre" type="text" class="swal2-input" style="width:100%; margin:0;" />
+
+      <label style="text-align:left; font-weight:800; color:#007BFF; display:block; margin:10px 0 6px;">Presentación</label>
+      <input id="m-pres" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: Tabletas 500mg" />
+
+      <label style="text-align:left; font-weight:800; color:#007BFF; display:block; margin:10px 0 6px;">Unidad</label>
+      <input id="m-uni" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: caja / frasco" />
+
+      <label style="text-align:left; font-weight:800; color:#007BFF; display:block; margin:10px 0 6px;">Categoría</label>
+      <input id="m-cat" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: Analgésico" />
+
+      <label style="text-align:left; font-weight:800; color:#007BFF; display:block; margin:10px 0 6px;">Fecha de vencimiento (dd/mm/yyyy)</label>
+      <input id="m-v" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="31/12/2026" />
+    `,
+    showCancelButton:true,
+    confirmButtonText:'Crear',
+    cancelButtonText:'Cancelar',
+    preConfirm: ()=>{
+      const nombre = (document.getElementById('m-nombre').value || '').trim();
+      const presentacion = (document.getElementById('m-pres').value || '').trim();
+      const unidad = (document.getElementById('m-uni').value || '').trim();
+      const categoria = (document.getElementById('m-cat').value || '').trim();
+      const fecha_vencimiento = (document.getElementById('m-v').value || '').trim();
+
+      if(!nombre) return Swal.showValidationMessage('Nombre requerido');
+      if(!presentacion) return Swal.showValidationMessage('Presentación requerida');
+      if(!isDDMMYYYY(fecha_vencimiento)) return Swal.showValidationMessage('Fecha inválida. Usa dd/mm/yyyy');
+
+      return { nombre, presentacion, unidad, categoria, fecha_vencimiento };
+    }
+  });
+
+  if(!v) return;
+
+  try{
+    const r = await apiPost('addMedicamento', v);
+    await Swal.fire({ icon:'success', title:'Creado', text:'ID: ' + r.id_med, timer:2000, showConfirmButton:false });
+    await apiPost('rebuildStock', {}); // asegura que Stock exista/esté consistente
+    await loadStock();
+  }catch(e){
+    Swal.fire({ icon:'error', title:'Error', text:e.message });
+  }
+}
+
+async function movimiento(id_med, tipo){
+  const usuario = (document.getElementById('usuario').value || '').trim() || 'WEB';
+
+  const { value: form } = await Swal.fire({
+    icon:'question',
+    title: (tipo === 'ENTRADA' ? 'Entrada' : 'Salida') + ' - ' + id_med,
+    html: `
+      <label style="text-align:left; font-weight:800; color:#007BFF; display:block; margin:0 0 6px;">Cantidad</label>
+      <input id="mv-cant" type="number" min="1" step="1" class="swal2-input" style="width:100%; margin:0;" />
+
+      <label style="text-align:left; font-weight:800; color:#007BFF; display:block; margin:10px 0 6px;">Observación</label>
+      <input id="mv-obs" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Opcional" />
+    `,
+    showCancelButton:true,
+    confirmButtonText:'Guardar',
+    cancelButtonText:'Cancelar',
+    preConfirm: ()=>{
+      const cant = Number(document.getElementById('mv-cant').value);
+      const obs = (document.getElementById('mv-obs').value || '').trim();
+      if(!(cant > 0)) return Swal.showValidationMessage('Cantidad inválida');
+      return { cant, obs };
+    }
+  });
+
+  if(!form) return;
+
+  try{
+    const r = await apiPost('movimiento', {
+      id_med,
+      tipo,
+      cantidad: form.cant,
+      observacion: form.obs,
+      usuario
+    });
+
+    await Swal.fire({
+      icon:'success',
+      title:'Registrado',
+      text:`Nuevo stock: ${r.stock} (${r.estado})`,
+      timer: 2000,
+      showConfirmButton:false
+    });
+    await loadStock();
+  }catch(e){
+    Swal.fire({ icon:'error', title:'Error', text:e.message });
+  }
+}
+
+/* Eventos */
+document.getElementById('btn-cargar').addEventListener('click', ()=> loadStock().catch(e=>{
+  Swal.fire({ icon:'error', title:'Error', text:e.message });
+}));
+document.getElementById('btn-nuevo').addEventListener('click', ()=> nuevoMedicamento());
+
+document.getElementById('q').addEventListener('input', ()=>{
+  clearTimeout(window.__tq);
+  window.__tq = setTimeout(()=> loadStock().catch(()=>{}), 220);
+});
+</script>
+</body>
+</html>
