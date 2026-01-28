@@ -30,11 +30,9 @@ html,body{
 
 .container{ max-width: 1100px; margin: 0 auto; padding: 16px; }
 
-.view{
-  display:none; opacity:0; transform: translateY(8px);
+.view{ display:none; opacity:0; transform: translateY(8px);
   transition: opacity .25s ease, transform .25s ease;
-  box-sizing:border-box;
-  padding: 0 16px;
+  box-sizing:border-box; padding: 0 16px;
 }
 .view.active{ display:block; opacity:1; transform: translateY(0); }
 
@@ -43,8 +41,7 @@ html,body{
   backdrop-filter: blur(3px);
   border: 2px solid #ddd; border-radius: 10px;
   box-shadow: 0 8px 18px rgba(0,0,0,.15);
-  margin: 16px auto;
-  padding: 16px 16px 10px 16px;
+  margin: 16px auto; padding: 16px 16px 10px 16px;
 }
 .card.narrow{ max-width: 760px; }
 
@@ -88,10 +85,7 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   opacity:1; transition: opacity .12s ease;
   will-change: opacity;
 }
-.loader.hidden{
-  display:flex !important;
-  opacity:0; pointer-events:none;
-}
+.loader.hidden{ display:flex !important; opacity:0; pointer-events:none; }
 
 .spinner-ios{ position:relative; width:64px; height:64px; }
 .spinner-ios i{
@@ -177,7 +171,7 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   display:flex;
   flex-direction:column;
   gap:10px;
-  min-width:190px;
+  min-width:220px;
 }
 .item-actions button{
   border-radius:999px;
@@ -193,7 +187,6 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   flex-wrap:wrap;
   margin-bottom:12px;
 }
-
 .brand{
   width:210px;
   border-radius:8px;
@@ -201,11 +194,11 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   margin:12px auto 4px;
 }
 
-/* SweetAlert inputs look */
-.swal2-input, .swal2-select{
-  border-radius:10px !important;
-  border:2px solid #111 !important;
-}
+/* modal date (copiado de indexref) */
+.picker-modal-cal{ position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding-top:32px; background:rgba(0,0,0,.5); z-index:9999; }
+.picker-box-cal{ width:90%; max-width:520px; background:#fff; border-radius:8px; padding:16px; box-shadow:0 8px 18px rgba(0,0,0,.18); }
+.picker-grid-cal{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:12px 0; }
+.picker-grid-cal select{ width:100%; height:180px; }
 </style>
 </head>
 
@@ -219,9 +212,7 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 
 <div class="container">
   <section id="view-main" class="view active">
-
     <div class="top-actions">
-      <!-- ✅ Quitado "Actualizar" -->
       <button class="chip danger" id="btn-clear">Limpiar</button>
     </div>
 
@@ -254,11 +245,36 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   </section>
 </div>
 
+<!-- Date picker modal (reusable para add/edit) -->
+<div id="eventoFechaModal" class="picker-modal-cal" aria-hidden="true">
+  <div class="picker-box-cal">
+    <h3 style="margin:0 0 8px 0;">Selecciona la Fecha</h3>
+    <div class="picker-grid-cal">
+      <div>
+        <small>Día</small>
+        <select id="evtDia" size="10"></select>
+      </div>
+      <div>
+        <small>Mes</small>
+        <select id="evtMes" size="12"></select>
+      </div>
+      <div>
+        <small>Año</small>
+        <select id="evtAnio" size="10"></select>
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button type="button" class="btn" id="evtFechaCancelar">Cancelar</button>
+      <button type="button" class="btn-primary" id="evtFechaOk">Ok</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ================== CONFIG ================== */
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyX5lyzwDKN6XdojWUcZdnWDfXFpf0OIATBkGsI-of0uijcAUwlQNlRXFfCWH360PkYjA/exec';
 
-/* ================== CATEGORÍAS (mostrar descripción, guardar solo nombre) ================== */
+/* ================== CATEGORIES ================== */
 const CATEGORIES = [
   { name:'Analgésicos', desc:'Alivio del dolor.' },
   { name:'Antipiréticos', desc:'Reducción de la fiebre.' },
@@ -297,72 +313,31 @@ function catLabel(name){
 const loader = document.getElementById('loader');
 let loadingCount = 0;
 let loaderTimer = null;
-function startLoading(){
-  loadingCount++;
-  if(loadingCount === 1){
-    loaderTimer = setTimeout(()=>{ loader.classList.remove('hidden'); loaderTimer = null; }, 120);
-  }
-}
-function stopLoading(){
-  if(loadingCount === 0) return;
-  loadingCount--;
-  if(loadingCount === 0){
-    if(loaderTimer){ clearTimeout(loaderTimer); loaderTimer = null; }
-    loader.classList.add('hidden');
-  }
-}
+function startLoading(){ loadingCount++; if(loadingCount===1){ loaderTimer = setTimeout(()=>{ loader.classList.remove('hidden'); loaderTimer=null; },120); } }
+function stopLoading(){ if(loadingCount===0) return; loadingCount--; if(loadingCount===0){ if(loaderTimer){ clearTimeout(loaderTimer); loaderTimer=null; } loader.classList.add('hidden'); } }
 
-/* ================== Sonidos ================== */
+/* ================== Sounds / Swal patch ================== */
 const SOUNDS = {
-  question: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_fail_ls2aif.mp3',
-  info: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Default_notification_pkp4wr.mp3',
-  success: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_success_t5aawh.mp3',
-  error: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
-  warning: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
-  back: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Keyboard_Enter_b9k2dc.mp3'
+  question:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_fail_ls2aif.mp3',
+  info:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Default_notification_pkp4wr.mp3',
+  success:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_success_t5aawh.mp3',
+  error:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
+  warning:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
+  back:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Keyboard_Enter_b9k2dc.mp3'
 };
-function playSoundOnce(url){
-  try{ const a = new Audio(url); a.preload='auto'; a.play().catch(()=>{}); }catch(_){}
-}
-if(window.Swal && typeof Swal.fire === 'function'){
+function playSoundOnce(url){ try{ const a=new Audio(url); a.preload='auto'; a.play().catch(()=>{}); }catch(_){ } }
+if(window.Swal && typeof Swal.fire==='function'){
   const __fire = Swal.fire.bind(Swal);
-  Swal.fire = function(options = {}, ...rest){
-    try{
-      const icon = options.icon || options.type;
-      if(icon && SOUNDS[icon]) playSoundOnce(SOUNDS[icon]);
-    }catch(_){}
-    return __fire(options, ...rest);
-  }
+  Swal.fire = function(options={},...rest){ try{ const icon = options.icon || options.type; if(icon && SOUNDS[icon]) playSoundOnce(SOUNDS[icon]); }catch(_){}
+    return __fire(options,...rest);
+  };
 }
 
-/* ================== API ================== */
-async function apiGet(action, params = {}){
-  startLoading();
-  try{
-    const url = new URL(API_BASE);
-    url.search = new URLSearchParams({ action, ...params }).toString();
-    const r = await fetch(url.toString(), { method:'GET' });
-    const j = await r.json();
-    if(!j.ok) throw new Error(j.error || 'Error');
-    return j.data;
-  } finally { stopLoading(); }
-}
-async function apiPost(action, body = {}){
-  startLoading();
-  try{
-    const url = API_BASE + '?action=' + encodeURIComponent(action);
-    const r = await fetch(url, {
-      method:'POST',
-      headers: { 'Content-Type':'text/plain;charset=utf-8' },
-      body: JSON.stringify(body)
-    });
-    const j = await r.json();
-    if(!j.ok) throw new Error(j.error || 'Error');
-    return j.data;
-  } finally { stopLoading(); }
-}
+/* ================== API helpers ================== */
+async function apiGet(action, params={}){ startLoading(); try{ const url=new URL(API_BASE); url.search=new URLSearchParams({ action, ...params }).toString(); const r=await fetch(url.toString(),{method:'GET'}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error'); return j.data; } finally{ stopLoading(); } }
+async function apiPost(action, body={}){ startLoading(); try{ const url = API_BASE + '?action=' + encodeURIComponent(action); const r = await fetch(url, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify(body) }); const j = await r.json(); if(!j.ok) throw new Error(j.error||'Error'); return j.data; } finally{ stopLoading(); } }
 
-/* ================== Estado por stock (corrige inconsistencia) ================== */
+/* ================== Estado por stock ================== */
 function estadoPorStock(stock){
   const s = Number(stock ?? 0);
   if(s <= 2) return { label:'AGOTADO', cls:'agotado' };
@@ -371,169 +346,218 @@ function estadoPorStock(stock){
   return { label:'SURTIDO', cls:'surtido' };
 }
 
-/* ================== UI ================== */
-let STOCK_CACHE = [];
-
-function escapeHtml(str){
-  return String(str ?? '')
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'","&#039;");
-}
+/* ================== Render listado ================== */
+function escapeHtml(str){ return String(str||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;"); }
 
 function render(items){
   const wrap = document.getElementById('list');
-  wrap.innerHTML = '';
-
-  if(!items.length){
-    const p = document.createElement('p');
-    p.className = 'muted center';
-    p.textContent = 'No hay medicamentos para mostrar.';
-    wrap.appendChild(p);
-    return;
-  }
-
-  for(const it of items){
-    const row = document.createElement('div');
-    row.className = 'item';
-
-    const main = document.createElement('div');
-    main.className = 'item-main';
-
-    const t = document.createElement('p');
-    t.className = 'item-title';
-    t.textContent = (it.nombre || '') + (it.presentacion ? (' — ' + it.presentacion) : '');
-
-    const sub = document.createElement('p');
-    sub.className = 'item-sub';
-    sub.textContent = `ID: ${it.id_med} | Stock: ${it.stock}`;
-
-    const meta = document.createElement('p');
-    meta.className = 'item-meta';
-
-    const dv = (it.dias_para_vencer === '' || it.dias_para_vencer === null) ? '—' : it.dias_para_vencer;
-    const ubic = it.ubicacion ? String(it.ubicacion) : '—';
-    const catName = it.categoria ? String(it.categoria) : '';
-
-    meta.innerHTML =
-      `<b>Ubicación:</b> ${escapeHtml(ubic)}<br>` +
-      `<b>Categoría:</b> ${escapeHtml(catLabel(catName))}<br>` +
-      `Vence: ${escapeHtml(it.fecha_vencimiento || '—')} | Días: ${escapeHtml(String(dv))} | Últ mov: ${escapeHtml(it.ult_mov || '—')}`;
-
-    main.appendChild(t);
-    main.appendChild(sub);
-    main.appendChild(meta);
-
-    // ✅ Badge ahora se calcula por stock (no depende de texto del backend)
+  wrap.innerHTML='';
+  if(!items.length){ const p=document.createElement('p'); p.className='muted center'; p.textContent='No hay medicamentos para mostrar.'; wrap.appendChild(p); return; }
+  items.forEach(it=>{
+    const row=document.createElement('div'); row.className='item';
+    const main=document.createElement('div'); main.className='item-main';
+    const t=document.createElement('p'); t.className='item-title'; t.textContent=(it.nombre||'') + (it.presentacion?(' — '+it.presentacion):'');
+    const sub=document.createElement('p'); sub.className='item-sub'; sub.textContent=`ID: ${it.id_med} | Stock: ${it.stock}`;
+    const meta=document.createElement('p'); meta.className='item-meta';
+    const dv = (it.dias_para_vencer==='' || it.dias_para_vencer===null)?'—':it.dias_para_vencer;
+    const ubic = it.ubicacion||'—';
+    meta.innerHTML = `<b>Ubicación:</b> ${escapeHtml(ubic)}<br><b>Categoría:</b> ${escapeHtml(catLabel(it.categoria))}<br>Vence: ${escapeHtml(it.fecha_vencimiento||'—')} | Días: ${escapeHtml(String(dv))} | Últ mov: ${escapeHtml(it.ult_mov||'—')}`;
+    main.appendChild(t); main.appendChild(sub); main.appendChild(meta);
     const est = estadoPorStock(it.stock);
-    const badge = document.createElement('div');
-    badge.className = 'badge ' + est.cls;
-    badge.textContent = est.label;
-
-    const actions = document.createElement('div');
-    actions.className = 'item-actions';
-
-    const bIn = document.createElement('button');
-    bIn.className = 'btn-primary';
-    bIn.textContent = '+ Entrada';
-    bIn.addEventListener('click', ()=> movimiento(it.id_med, 'ENTRADA'));
-
-    const bOut = document.createElement('button');
-    bOut.textContent = '- Salida';
-    bOut.addEventListener('click', ()=> movimiento(it.id_med, 'SALIDA'));
-
-    actions.appendChild(bIn);
-    actions.appendChild(bOut);
-
-    row.appendChild(main);
-    row.appendChild(badge);
-    row.appendChild(actions);
-
+    const badge=document.createElement('div'); badge.className='badge '+est.cls; badge.textContent=est.label;
+    const actions=document.createElement('div'); actions.className='item-actions';
+    const bIn=document.createElement('button'); bIn.className='btn-primary'; bIn.textContent='+ Entrada'; bIn.addEventListener('click', ()=> movimiento(it.id_med,'ENTRADA'));
+    const bOut=document.createElement('button'); bOut.textContent='- Salida'; bOut.addEventListener('click', ()=> movimiento(it.id_med,'SALIDA'));
+    // ✅ Edit button
+    const bEdit=document.createElement('button'); bEdit.textContent='Editar'; bEdit.addEventListener('click', ()=> editarMedicamento(it.id_med));
+    actions.appendChild(bIn); actions.appendChild(bOut); actions.appendChild(bEdit);
+    row.appendChild(main); row.appendChild(badge); row.appendChild(actions);
     wrap.appendChild(row);
-  }
+  });
 }
 
-async function loadStock(){
-  const q = (document.getElementById('q').value || '').trim();
-  const data = await apiGet('listStock', q ? { query:q } : {});
-  STOCK_CACHE = Array.isArray(data) ? data : [];
-  render(STOCK_CACHE);
-}
+/* ================== Load stock ================== */
+let STOCK_CACHE = [];
+async function loadStock(){ const q=(document.getElementById('q').value||'').trim(); const data = await apiGet('listStock', q?{query:q}:{}); STOCK_CACHE = Array.isArray(data)?data:[]; render(STOCK_CACHE); }
 
-function isDDMMYYYY(s){
-  return /^(\d{2})\/(\d{2})\/(\d{4})$/.test(String(s||'').trim());
-}
-
-function categoryOptionsHtml(){
-  return CATEGORIES.map(c => {
+/* ================== Categories select html helper ================== */
+function categoryOptionsHtml(selectedName){
+  return CATEGORIES.map(c=>{
     const label = `${c.name}: ${c.desc}`;
-    return `<option value="${escapeHtml(c.name)}">${escapeHtml(label)}</option>`;
+    const sel = (selectedName && selectedName===c.name) ? 'selected' : '';
+    return `<option value="${escapeHtml(c.name)}" ${sel}>${escapeHtml(label)}</option>`;
   }).join('');
 }
 
+/* ================== Date modal (copiado / adaptado) ================== */
+function calPad2(n){ return String(n).padStart(2,'0'); }
+function calInitSimplePicker(){
+  const dSel=document.getElementById('evtDia'), mSel=document.getElementById('evtMes'), aSel=document.getElementById('evtAnio');
+  if(dSel && !dSel.childElementCount){
+    for(let d=1; d<=31; d++){ const opt=document.createElement('option'); opt.value=calPad2(d); opt.textContent=opt.value; dSel.appendChild(opt); }
+  }
+  if(mSel && !mSel.childElementCount){
+    const mesesNombres=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    for(let i=0;i<12;i++){ const opt=document.createElement('option'); opt.value=calPad2(i+1); opt.textContent=mesesNombres[i]; mSel.appendChild(opt); }
+  }
+  if(aSel && !aSel.childElementCount){
+    const thisYear = new Date().getFullYear();
+    for(let y=thisYear-2; y<=thisYear+5; y++){ const opt=document.createElement('option'); opt.value=String(y); opt.textContent=String(y); if(y===thisYear) opt.selected=true; aSel.appendChild(opt); }
+  }
+}
+calInitSimplePicker();
+
+let dateModalTargetInputId = null;
+function showDatePicker(targetInputId, initialValue){
+  dateModalTargetInputId = targetInputId;
+  const modal = document.getElementById('eventoFechaModal');
+  const dSel=document.getElementById('evtDia'), mSel=document.getElementById('evtMes'), aSel=document.getElementById('evtAnio');
+  if(initialValue && /^\d{2}\/\d{2}\/\d{4}$/.test(initialValue)){
+    const parts = initialValue.split('/'); dSel.value=parts[0]; mSel.value=parts[1]; aSel.value=parts[2];
+  } else {
+    const today=new Date(); dSel.value=calPad2(today.getDate()); mSel.value=calPad2(today.getMonth()+1); aSel.value=String(today.getFullYear());
+  }
+  modal.style.display='flex';
+  modal.setAttribute('aria-hidden','false');
+}
+document.getElementById('evtFechaCancelar').addEventListener('click', ()=>{
+  const modal=document.getElementById('eventoFechaModal'); modal.style.display='none'; modal.setAttribute('aria-hidden','true'); dateModalTargetInputId=null;
+});
+document.getElementById('evtFechaOk').addEventListener('click', ()=>{
+  const d=document.getElementById('evtDia').value, m=document.getElementById('evtMes').value, y=document.getElementById('evtAnio').value;
+  const val = `${d}/${m}/${y}`;
+  if(dateModalTargetInputId){
+    // may be inside sweetalert, so querySelector in document
+    const el = document.getElementById(dateModalTargetInputId);
+    if(el) el.value = val;
+    else {
+      // try inside swal modal (swal creates its own DOM)
+      const swalEl = document.querySelector('.swal2-container #' + dateModalTargetInputId);
+      if(swalEl) swalEl.value = val;
+    }
+  }
+  const modal=document.getElementById('eventoFechaModal'); modal.style.display='none'; modal.setAttribute('aria-hidden','true'); dateModalTargetInputId=null;
+});
+
+/* ================== Add / Edit Medicamento ================== */
+function isDDMMYYYY(s){ return /^\d{2}\/\d{2}\/\d{4}$/.test(String(s||'').trim()); }
+
 async function nuevoMedicamento(){
+  const html = `
+    <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:0 0 6px;">Nombre</label>
+    <input id="m-nombre" type="text" class="swal2-input" style="width:100%; margin:0;" />
+
+    <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Presentación</label>
+    <input id="m-pres" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: Tableta 500 mg" />
+
+    <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Ubicación</label>
+    <input id="m-ubic" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ejemplo: Instante Principal Bloque A" />
+
+    <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Categoría</label>
+    <select id="m-cat" class="swal2-select" style="width:100%; margin:0; padding:12px; border-radius:10px; border:2px solid #111;">
+      <option value="" disabled selected>Selecciona la categoría</option>
+      ${categoryOptionsHtml()}
+    </select>
+
+    <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Fecha de vencimiento (dd/mm/yyyy)</label>
+    <input id="m-v" type="text" class="swal2-input" readonly style="cursor:pointer;" onclick="showDatePicker('m-v')" placeholder="31/12/2026" />
+  `;
+
   const { value: v } = await Swal.fire({
     icon:'info',
     title:'Nuevo Medicamento',
-    html: `
-      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:0 0 6px;">Nombre</label>
-      <input id="m-nombre" type="text" class="swal2-input" style="width:100%; margin:0;" />
-
-      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Presentación</label>
-      <input id="m-pres" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: Tableta 500 mg" />
-
-      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Ubicación</label>
-      <input id="m-ubic" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ejemplo: Instante Principal Bloque A" />
-
-      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Categoría</label>
-      <select id="m-cat" class="swal2-select" style="width:100%; margin:0; padding:12px; border-radius:10px; border:2px solid #111;">
-        <option value="" disabled selected>Selecciona una categoría</option>
-        ${categoryOptionsHtml()}
-      </select>
-
-      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Fecha de vencimiento (dd/mm/yyyy)</label>
-      <input id="m-v" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="31/12/2026" />
-    `,
+    html,
     showCancelButton:true,
     confirmButtonText:'Crear',
     cancelButtonText:'Cancelar',
     preConfirm: ()=>{
-      const nombre = (document.getElementById('m-nombre').value || '').trim();
-      const presentacion = (document.getElementById('m-pres').value || '').trim();
-      const ubicacion = (document.getElementById('m-ubic').value || '').trim();
-      const categoria = (document.getElementById('m-cat').value || '').trim(); // ✅ solo nombre
-      const fecha_vencimiento = (document.getElementById('m-v').value || '').trim();
-
+      const nombre = (document.getElementById('m-nombre').value||'').trim();
+      const presentacion = (document.getElementById('m-pres').value||'').trim();
+      const ubicacion = (document.getElementById('m-ubic').value||'').trim();
+      const categoria = (document.getElementById('m-cat').value||'').trim();
+      const fecha_vencimiento = (document.getElementById('m-v').value||'').trim();
       if(!nombre) return Swal.showValidationMessage('Nombre requerido');
       if(!presentacion) return Swal.showValidationMessage('Presentación requerida');
       if(!ubicacion) return Swal.showValidationMessage('Ubicación requerida');
       if(!categoria) return Swal.showValidationMessage('Categoría requerida');
       if(!isDDMMYYYY(fecha_vencimiento)) return Swal.showValidationMessage('Fecha inválida. Usa dd/mm/yyyy');
-
       return { nombre, presentacion, ubicacion, categoria, fecha_vencimiento };
     }
   });
-
   if(!v) return;
-
-  const r = await apiPost('addMedicamento', v);
-  await Swal.fire({ icon:'success', title:'Creado', text:'ID: ' + r.id_med, timer:2000, showConfirmButton:false });
-  await apiPost('rebuildStock', {});
+  const r = await apiPost('addmedicamento', v);
+  await Swal.fire({ icon:'success', title:'Creado', text:'ID: '+r.id_med, timer:1500, showConfirmButton:false });
+  await apiPost('rebuildstock', {});
   await loadStock();
 }
 
-async function movimiento(id_med, tipo){
-  const usuario = (document.getElementById('usuario').value || '').trim() || 'WEB';
+async function editarMedicamento(id_med){
+  try{
+    const med = await apiGet('getmedicamento',{ id: id_med });
+    if(!med) return Swal.fire({ icon:'info', title:'No encontrado' });
 
+    const html = `
+      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:0 0 6px;">Nombre</label>
+      <input id="m-nombre" type="text" class="swal2-input" style="width:100%; margin:0;" value="${escapeHtml(med.NOMBRE||'')}" />
+
+      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Presentación</label>
+      <input id="m-pres" type="text" class="swal2-input" style="width:100%; margin:0;" value="${escapeHtml(med.PRESENTACION||'')}" />
+
+      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Ubicación</label>
+      <input id="m-ubic" type="text" class="swal2-input" style="width:100%; margin:0;" value="${escapeHtml(med.UBICACION||'')}" />
+
+      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Categoría</label>
+      <select id="m-cat" class="swal2-select" style="width:100%; margin:0; padding:12px; border-radius:10px; border:2px solid #111;">
+        <option value="" disabled>Selecciona la categoría</option>
+        ${categoryOptionsHtml(med.CATEGORIA||'')}
+      </select>
+
+      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Fecha de vencimiento (dd/mm/yyyy)</label>
+      <input id="m-v" type="text" class="swal2-input" readonly style="cursor:pointer;" onclick="showDatePicker('m-v','${escapeHtml(med.FECHA_VENCIMIENTO||'')}')" value="${escapeHtml(med.FECHA_VENCIMIENTO||'')}" />
+    `;
+
+    const { value: v } = await Swal.fire({
+      icon:'info',
+      title:'Editar Medicamento',
+      html,
+      showCancelButton:true,
+      confirmButtonText:'Guardar',
+      cancelButtonText:'Cancelar',
+      preConfirm: ()=>{
+        const nombre = (document.getElementById('m-nombre').value||'').trim();
+        const presentacion = (document.getElementById('m-pres').value||'').trim();
+        const ubicacion = (document.getElementById('m-ubic').value||'').trim();
+        const categoria = (document.getElementById('m-cat').value||'').trim();
+        const fecha_vencimiento = (document.getElementById('m-v').value||'').trim();
+        if(!nombre) return Swal.showValidationMessage('Nombre requerido');
+        if(!presentacion) return Swal.showValidationMessage('Presentación requerida');
+        if(!ubicacion) return Swal.showValidationMessage('Ubicación requerida');
+        if(!categoria) return Swal.showValidationMessage('Categoría requerida');
+        if(!isDDMMYYYY(fecha_vencimiento)) return Swal.showValidationMessage('Fecha inválida. Usa dd/mm/yyyy');
+        return { nombre, presentacion, ubicacion, categoria, fecha_vencimiento };
+      }
+    });
+    if(!v) return;
+
+    const body = Object.assign({ id_med }, v);
+    const res = await apiPost('updatemedicamento', body);
+    await Swal.fire({ icon:'success', title:'Guardado', timer:1400, showConfirmButton:false });
+    await apiPost('rebuildstock', {});
+    await loadStock();
+  }catch(e){
+    Swal.fire({ icon:'error', title:'Error', text:String(e.message||e) });
+  }
+}
+
+/* ================== Movimiento (Entrada/Salida) ================== */
+async function movimiento(id_med, tipo){
+  const usuario = (document.getElementById('usuario').value||'').trim()||'WEB';
   const { value: form } = await Swal.fire({
     icon:'question',
-    title: (tipo === 'ENTRADA' ? 'Entrada' : 'Salida') + ' - ' + id_med,
+    title: (tipo==='ENTRADA'?'Entrada':'Salida') + ' - ' + id_med,
     html: `
       <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:0 0 6px;">Cantidad</label>
       <input id="mv-cant" type="number" min="1" step="1" class="swal2-input" style="width:100%; margin:0;" />
-
       <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Observación</label>
       <input id="mv-obs" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Opcional" />
     `,
@@ -542,51 +566,30 @@ async function movimiento(id_med, tipo){
     cancelButtonText:'Cancelar',
     preConfirm: ()=>{
       const cant = Number(document.getElementById('mv-cant').value);
-      const obs = (document.getElementById('mv-obs').value || '').trim();
-      if(!(cant > 0)) return Swal.showValidationMessage('Cantidad inválida');
+      const obs = (document.getElementById('mv-obs').value||'').trim();
+      if(!(cant>0)) return Swal.showValidationMessage('Cantidad inválida');
       return { cant, obs };
     }
   });
-
   if(!form) return;
-
-  const r = await apiPost('movimiento', {
-    id_med,
-    tipo,
-    cantidad: form.cant,
-    observacion: form.obs,
-    usuario
-  });
-
-  await Swal.fire({
-    icon:'success',
-    title:'Registrado',
-    text:`Nuevo stock: ${r.stock} (${r.estado})`,
-    timer: 2200,
-    showConfirmButton:false
-  });
-
-  await loadStock();
+  try{
+    const r = await apiPost('movimiento',{ id_med, tipo, cantidad: form.cant, observacion: form.obs, usuario });
+    await Swal.fire({ icon:'success', title:'Registrado', text:`Nuevo stock: ${r.stock} (${r.estado})`, timer:1500, showConfirmButton:false });
+    await loadStock();
+  }catch(e){
+    Swal.fire({ icon:'error', title:'Error', text:String(e.message||e) });
+  }
 }
 
-/* ================== Botones ================== */
-document.getElementById('btn-cargar').addEventListener('click', ()=> loadStock().catch(e=>{
-  Swal.fire({ icon:'error', title:'Error', text:e.message });
-}));
-document.getElementById('btn-nuevo').addEventListener('click', ()=> nuevoMedicamento().catch(e=>{
-  Swal.fire({ icon:'error', title:'Error', text:e.message });
-}));
-document.getElementById('btn-clear').addEventListener('click', ()=>{
-  playSoundOnce(SOUNDS.back);
-  document.getElementById('q').value = '';
-  document.getElementById('list').innerHTML = '';
-});
+/* ================== Buttons ================== */
+document.getElementById('btn-cargar').addEventListener('click', ()=> loadStock().catch(e=>Swal.fire({icon:'error',title:'Error',text:String(e.message||e)})));
+document.getElementById('btn-nuevo').addEventListener('click', ()=> nuevoMedicamento());
+document.getElementById('btn-clear').addEventListener('click', ()=>{ playSoundOnce(SOUNDS.back); document.getElementById('q').value=''; document.getElementById('list').innerHTML=''; });
 
-/* Filtro con debounce */
-document.getElementById('q').addEventListener('input', ()=>{
-  clearTimeout(window.__tq);
-  window.__tq = setTimeout(()=> loadStock().catch(()=>{}), 220);
-});
+document.getElementById('q').addEventListener('input', ()=>{ clearTimeout(window.__tq); window.__tq = setTimeout(()=> loadStock().catch(()=>{}),220); });
+
+/* ================== init ================== */
+window.addEventListener('load', ()=>{ loadStock().catch(()=>{}); });
 </script>
 </body>
 </html>
