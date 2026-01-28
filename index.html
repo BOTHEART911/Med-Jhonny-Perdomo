@@ -7,7 +7,6 @@
 
   <link rel="icon" href="https://res.cloudinary.com/dqqeavica/image/upload/v1759697569/Jhonny_tvexdy.png">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
@@ -84,47 +83,6 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 }
 .danger{ background:#e11; border-color:#e11; color:#fff; }
 
-/* OVERLAY lateral (menú deslizable) */
-.overlay{
-  position: fixed;
-  inset: 0;
-  pointer-events:none;
-}
-.overlay .scrim{
-  position:absolute; inset:0;
-  background:var(--scrim);
-  opacity:0; transition:opacity .25s ease;
-}
-.overlay .panel{
-  position:absolute; top:0; left:0;
-  width:min(360px, 90vw);
-  height:100%;
-  background:#000053;
-  color:#fff;
-  padding:16px 16px 8px 16px;
-  box-sizing:border-box;
-  transform: translateX(-100%);
-  transition: transform .25s ease;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  overflow-y:auto;
-}
-.overlay.open{ pointer-events:auto; }
-.overlay.open .scrim{ opacity:1; }
-.overlay.open .panel{ transform: translateX(0); }
-
-.menu-btn{
-  background: var(--primary);
-  color:#fff;
-  border:0;
-  font-weight:900;
-  border-radius:999px;
-  padding:12px;
-  box-shadow: 0 6px 12px rgba(0,0,0,.18);
-}
-.menu-btn:hover{ background: var(--primary-2); }
-
 /* Loader centrado (overlay) */
 .loader{
   position:fixed; inset:0;
@@ -176,9 +134,9 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 .item{
   background: rgba(255,255,255,.92);
   border:2px solid #ddd;
-  border-radius:16px;
-  padding:12px;
-  box-shadow:0 6px 14px rgba(0,0,0,.12);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
   display:flex;
   gap:12px;
   align-items:flex-start;
@@ -190,43 +148,47 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   font-weight:900;
   color:#1b2a6b;
   text-transform:uppercase;
+  letter-spacing:.2px;
 }
 .item-sub{
-  margin:4px 0 0;
+  margin:6px 0 0;
   color:#333;
-  font-weight:800;
-  font-size:.9rem;
+  font-weight:900;
+  font-size:.92rem;
 }
 .item-meta{
-  margin:6px 0 0;
-  color:#666;
-  font-size:.85rem;
+  margin:8px 0 0;
+  color:#444;
+  font-size:.86rem;
   font-weight:800;
   overflow-wrap:anywhere;
+  line-height:1.35;
 }
 
 .badge{
-  min-width:96px;
+  min-width:128px;
   text-align:center;
-  padding:6px 10px;
+  padding:8px 12px;
   border-radius:999px;
   font-weight:900;
   border:2px solid #111;
+  box-shadow:0 6px 12px rgba(0,0,0,.10);
 }
-.badge.rojo{ background:#fee2e2; color:#991b1b; border-color:var(--error); }
-.badge.naranja{ background:#ffedd5; color:#9a3412; border-color:var(--orange); }
-.badge.amarillo{ background:#fef3c7; color:#92400e; border-color:var(--warn); }
-.badge.verde{ background:#c6f6d5; color:#065f46; border-color:var(--ok); }
+.badge.agotado{ background:#fee2e2; color:#991b1b; border-color:var(--error); }
+.badge.ingresar{ background:#ffedd5; color:#9a3412; border-color:var(--orange); }
+.badge.estable{ background:#fef3c7; color:#92400e; border-color:var(--warn); }
+.badge.surtido{ background:#c6f6d5; color:#065f46; border-color:var(--ok); }
 
 .item-actions{
   display:flex;
   flex-direction:column;
-  gap:8px;
-  min-width:160px;
+  gap:10px;
+  min-width:190px;
 }
 .item-actions button{
   border-radius:999px;
-  padding:10px;
+  padding:12px;
+  font-size:1rem;
 }
 
 /* Header actions */
@@ -234,14 +196,9 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   display:flex;
   gap:12px;
   align-items:center;
-  justify-content:space-between;
+  justify-content:flex-end;
   flex-wrap:wrap;
   margin-bottom:12px;
-}
-.top-actions-left{
-  display:flex;
-  gap:12px;
-  align-items:center;
 }
 .brand{
   width:210px;
@@ -262,17 +219,12 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 </div>
 
 <div class="container">
-
   <section id="view-main" class="view active">
 
+    <!-- Quitamos botón MENÚ (redundante) -->
     <div class="top-actions">
-      <div class="top-actions-left">
-        <button class="chip" id="btn-open-menu">MENÚ</button>
-      </div>
-      <div style="display:flex; gap:12px; align-items:center;">
-        <button class="chip" id="btn-refresh">Actualizar</button>
-        <button class="chip danger" id="btn-clear">Limpiar</button>
-      </div>
+      <button class="chip" id="btn-refresh">Actualizar</button>
+      <button class="chip danger" id="btn-clear">Limpiar</button>
     </div>
 
     <div class="card narrow">
@@ -291,7 +243,7 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
       <input id="q" type="text" placeholder="Nombre / presentación / ID..." />
 
       <p class="muted center" style="margin:10px 0 0;">
-        Semáforo: <b>ROJO 0–2</b> / <b>NARANJA 3–5</b> / <b>AMARILLO 6–15</b> / <b>VERDE >15</b>
+        Semáforo: <b>AGOTADO 0–2</b> / <b>INGRESAR MÁS 3–5</b> / <b>ESTABLE 6–15</b> / <b>SURTIDO >15</b>
       </p>
 
       <div class="image-center">
@@ -305,34 +257,8 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   </section>
 </div>
 
-<!-- OVERLAY -->
-<div class="overlay" id="overlay">
-  <div class="scrim" id="ovlClose"></div>
-  <aside class="panel">
-    <div class="btn-row">
-      <button id="btn-ovl-back">ATRÁS</button>
-    </div>
-
-    <div class="image-center">
-      <img alt="banner" src="https://res.cloudinary.com/dqqeavica/image/upload/v1759696513/Jhonny_y1tslf.gif"
-           style="max-width:180px;border-radius:10px;" />
-    </div>
-
-    <h3 style="text-align:center; margin:4px 0 6px;">Acciones</h3>
-
-    <button class="menu-btn" id="menu-cargar">Cargar Stock</button>
-    <button class="menu-btn" id="menu-nuevo">Nuevo Medicamento</button>
-    <button class="menu-btn" id="menu-rebuild">Recalcular Stock</button>
-
-    <div style="height:16px"></div>
-    <img class="brand" alt="Brand" src="https://res.cloudinary.com/dqqeavica/image/upload/v1753538919/BANNER_JHONNY_e0yw7m.png" />
-    <p class="center muted">Copyright © BOTHEART</p>
-  </aside>
-</div>
-
 <script>
 /* ================== CONFIG ================== */
-/* Pega aquí tu URL real del Web App (/exec) */
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyX5lyzwDKN6XdojWUcZdnWDfXFpf0OIATBkGsI-of0uijcAUwlQNlRXFfCWH360PkYjA/exec';
 
 /* ================== Loader (smart delay) ================== */
@@ -357,15 +283,14 @@ function stopLoading(){
   }
 }
 
-/* ================== Sonidos (los tuyos) ================== */
+/* ================== Sonidos ================== */
 const SOUNDS = {
   question: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_fail_ls2aif.mp3',
   info: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Default_notification_pkp4wr.mp3',
   success: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_success_t5aawh.mp3',
   error: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
   warning: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
-  back: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Keyboard_Enter_b9k2dc.mp3',
-  menu: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Namedrop_Popup_ale2zy.mp3'
+  back: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Keyboard_Enter_b9k2dc.mp3'
 };
 function playSoundOnce(url){
   try{
@@ -390,7 +315,6 @@ if(window.Swal && typeof Swal.fire === 'function'){
 async function apiGet(action, params = {}){
   startLoading();
   try{
-    if(!API_BASE || API_BASE.includes('PUT_YOUR')) throw new Error('Configura API_BASE en el código.');
     const url = new URL(API_BASE);
     url.search = new URLSearchParams({ action, ...params }).toString();
     const r = await fetch(url.toString(), { method:'GET' });
@@ -402,7 +326,6 @@ async function apiGet(action, params = {}){
 async function apiPost(action, body = {}){
   startLoading();
   try{
-    if(!API_BASE || API_BASE.includes('PUT_YOUR')) throw new Error('Configura API_BASE en el código.');
     const url = API_BASE + '?action=' + encodeURIComponent(action);
     const r = await fetch(url, {
       method:'POST',
@@ -418,12 +341,13 @@ async function apiPost(action, body = {}){
 /* ================== UI ================== */
 let STOCK_CACHE = [];
 
-function badgeClass(estado){
-  const e = String(estado||'').toLowerCase();
-  if(e.includes('verde')) return 'verde';
-  if(e.includes('amarillo')) return 'amarillo';
-  if(e.includes('naranja')) return 'naranja';
-  return 'rojo';
+function mapEstado(estadoRaw){
+  // desde GS debe venir ya como: AGOTADO / INGRESAR MÁS / ESTABLE / SURTIDO
+  const e = String(estadoRaw || '').trim().toUpperCase();
+  if(e === 'SURTIDO') return { label:'SURTIDO', cls:'surtido' };
+  if(e === 'ESTABLE') return { label:'ESTABLE', cls:'estable' };
+  if(e === 'INGRESAR MÁS' || e === 'INGRESAR MAS') return { label:'INGRESAR MÁS', cls:'ingresar' };
+  return { label:'AGOTADO', cls:'agotado' };
 }
 
 function render(items){
@@ -456,15 +380,24 @@ function render(items){
     const meta = document.createElement('p');
     meta.className = 'item-meta';
     const dv = (it.dias_para_vencer === '' || it.dias_para_vencer === null) ? '—' : it.dias_para_vencer;
-    meta.textContent = `Vence: ${it.fecha_vencimiento || '—'} | Días: ${dv} | Últ mov: ${it.ult_mov || '—'}`;
+
+    // ✅ agregado: Ubicación y Categoría debajo de ID y antes de Vence:
+    const ubic = it.ubicacion ? String(it.ubicacion) : '—';
+    const cat  = it.categoria ? String(it.categoria) : '—';
+
+    meta.innerHTML =
+      `<b>Ubicación:</b> ${escapeHtml(ubic)}<br>` +
+      `<b>Categoría:</b> ${escapeHtml(cat)}<br>` +
+      `Vence: ${escapeHtml(it.fecha_vencimiento || '—')} | Días: ${escapeHtml(String(dv))} | Últ mov: ${escapeHtml(it.ult_mov || '—')}`;
 
     main.appendChild(t);
     main.appendChild(sub);
     main.appendChild(meta);
 
+    const est = mapEstado(it.estado_color);
     const badge = document.createElement('div');
-    badge.className = 'badge ' + badgeClass(it.estado_color);
-    badge.textContent = it.estado_color || 'ROJO';
+    badge.className = 'badge ' + est.cls;
+    badge.textContent = est.label;
 
     const actions = document.createElement('div');
     actions.className = 'item-actions';
@@ -500,6 +433,15 @@ function isDDMMYYYY(s){
   return /^(\d{2})\/(\d{2})\/(\d{4})$/.test(String(s||'').trim());
 }
 
+function escapeHtml(str){
+  return String(str ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
+
 async function nuevoMedicamento(){
   const { value: v } = await Swal.fire({
     icon:'info',
@@ -509,10 +451,11 @@ async function nuevoMedicamento(){
       <input id="m-nombre" type="text" class="swal2-input" style="width:100%; margin:0;" />
 
       <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Presentación</label>
-      <input id="m-pres" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: Tabletas 500mg" />
+      <input id="m-pres" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: Tableta 500 mg" />
 
-      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Unidad</label>
-      <input id="m-uni" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: caja / frasco" />
+      <!-- ✅ cambio: UNIDAD -> UBICACIÓN -->
+      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Ubicación</label>
+      <input id="m-ubic" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ejemplo: Instante Principal Bloque A" />
 
       <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Categoría</label>
       <input id="m-cat" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: Analgésico" />
@@ -526,15 +469,17 @@ async function nuevoMedicamento(){
     preConfirm: ()=>{
       const nombre = (document.getElementById('m-nombre').value || '').trim();
       const presentacion = (document.getElementById('m-pres').value || '').trim();
-      const unidad = (document.getElementById('m-uni').value || '').trim();
+      const ubicacion = (document.getElementById('m-ubic').value || '').trim();
       const categoria = (document.getElementById('m-cat').value || '').trim();
       const fecha_vencimiento = (document.getElementById('m-v').value || '').trim();
 
       if(!nombre) return Swal.showValidationMessage('Nombre requerido');
       if(!presentacion) return Swal.showValidationMessage('Presentación requerida');
+      if(!ubicacion) return Swal.showValidationMessage('Ubicación requerida');
+      if(!categoria) return Swal.showValidationMessage('Categoría requerida');
       if(!isDDMMYYYY(fecha_vencimiento)) return Swal.showValidationMessage('Fecha inválida. Usa dd/mm/yyyy');
 
-      return { nombre, presentacion, unidad, categoria, fecha_vencimiento };
+      return { nombre, presentacion, ubicacion, categoria, fecha_vencimiento };
     }
   });
 
@@ -591,21 +536,6 @@ async function movimiento(id_med, tipo){
   await loadStock();
 }
 
-/* ================== Overlay menu ================== */
-const overlay = document.getElementById('overlay');
-document.getElementById('btn-open-menu').addEventListener('click', ()=>{
-  playSoundOnce(SOUNDS.menu);
-  overlay.classList.add('open');
-});
-document.getElementById('btn-ovl-back').addEventListener('click', ()=>{
-  playSoundOnce(SOUNDS.back);
-  overlay.classList.remove('open');
-});
-document.getElementById('ovlClose').addEventListener('click', ()=>{
-  playSoundOnce(SOUNDS.back);
-  overlay.classList.remove('open');
-});
-
 /* ================== Botones ================== */
 document.getElementById('btn-cargar').addEventListener('click', ()=> loadStock().catch(e=>{
   Swal.fire({ icon:'error', title:'Error', text:e.message });
@@ -618,26 +548,6 @@ document.getElementById('btn-clear').addEventListener('click', ()=>{
   playSoundOnce(SOUNDS.back);
   document.getElementById('q').value = '';
   document.getElementById('list').innerHTML = '';
-});
-
-/* Menú lateral */
-document.getElementById('menu-cargar').addEventListener('click', ()=>{
-  overlay.classList.remove('open');
-  loadStock().catch(()=>{});
-});
-document.getElementById('menu-nuevo').addEventListener('click', ()=>{
-  overlay.classList.remove('open');
-  nuevoMedicamento().catch(()=>{});
-});
-document.getElementById('menu-rebuild').addEventListener('click', async ()=>{
-  overlay.classList.remove('open');
-  try{
-    await apiPost('rebuildStock', {});
-    Swal.fire({ icon:'success', title:'Stock recalculado', timer:1500, showConfirmButton:false });
-    await loadStock();
-  }catch(e){
-    Swal.fire({ icon:'error', title:'Error', text:e.message });
-  }
 });
 
 /* Filtro con debounce */
