@@ -200,14 +200,29 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 .picker-grid-cal{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:12px 0; }
 .picker-grid-cal select{ width:100%; height:180px; }
 
-  .swal2-select,
-.swal2-select option,
-select.swal2-select {
-  text-align: center; /* centra el texto dentro del <select> y (cuando el navegador lo respete) en las opciones */
+/* --- AÑADIR: centrar select y opciones (cross-browser) --- */
+/* Aplica al select dentro de SweetAlert y al select normal */
+.swal2-container .swal2-select,
+.swal2-container .swal2-select option,
+select.swal2-select,
+select {
+  text-align: center; /* centra el valor visible */
 }
 
-/* fallback: centrar texto del control select genérico en formularios */
+/* Firefox */
 select {
+  -moz-text-align-last: center;
+}
+
+/* Chrome, Edge, Safari */
+select {
+  -webkit-text-align-last: center;
+  text-align-last: center;
+}
+
+/* Forzar también las opciones (algunos navegadores ignoran, pero ayuda) */
+.swal2-container .swal2-select option,
+select option {
   text-align: center;
 }
 </style>
