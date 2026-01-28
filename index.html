@@ -30,7 +30,6 @@ html,body{
 
 .container{ max-width: 1100px; margin: 0 auto; padding: 16px; }
 
-/* VISTAS con transición */
 .view{
   display:none; opacity:0; transform: translateY(8px);
   transition: opacity .25s ease, transform .25s ease;
@@ -39,7 +38,6 @@ html,body{
 }
 .view.active{ display:block; opacity:1; transform: translateY(0); }
 
-/* Tarjetas */
 .card{
   background: rgba(255,255,255,.06);
   backdrop-filter: blur(3px);
@@ -56,7 +54,6 @@ p.helper{ color:#666; font-size:.95rem; text-align:center; margin:8px 0 16px; }
 .center{ text-align:center; }
 .image-center{ display:flex; justify-content:center; align-items:center; }
 
-/* Inputs y botones */
 label{ display:block; font-weight:800; margin: 10px 0 6px; color:var(--primary); }
 
 input, select, textarea, button{
@@ -83,7 +80,6 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 }
 .danger{ background:#e11; border-color:#e11; color:#fff; }
 
-/* Loader centrado (overlay) */
 .loader{
   position:fixed; inset:0;
   display:flex; align-items:center; justify-content:center;
@@ -97,7 +93,6 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   opacity:0; pointer-events:none;
 }
 
-/* Spinner iOS (12 barras) */
 .spinner-ios{ position:relative; width:64px; height:64px; }
 .spinner-ios i{
   position:absolute; left:50%; top:50%;
@@ -123,7 +118,6 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 
 .hidden{ display:none !important; }
 
-/* Listado estilo “cards” */
 .list{
   max-width: 980px;
   margin: 0 auto;
@@ -166,7 +160,7 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 }
 
 .badge{
-  min-width:128px;
+  min-width:160px;
   text-align:center;
   padding:8px 12px;
   border-radius:999px;
@@ -191,7 +185,6 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   font-size:1rem;
 }
 
-/* Header actions */
 .top-actions{
   display:flex;
   gap:12px;
@@ -200,17 +193,23 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   flex-wrap:wrap;
   margin-bottom:12px;
 }
+
 .brand{
   width:210px;
   border-radius:8px;
   display:block;
   margin:12px auto 4px;
 }
+
+/* SweetAlert inputs look */
+.swal2-input, .swal2-select{
+  border-radius:10px !important;
+  border:2px solid #111 !important;
+}
 </style>
 </head>
 
 <body>
-<!-- Loader -->
 <div id="loader" class="loader hidden" aria-live="polite" aria-busy="true">
   <div class="spinner-ios" role="status" aria-label="Cargando">
     <i></i><i></i><i></i><i></i><i></i><i></i>
@@ -221,9 +220,8 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 <div class="container">
   <section id="view-main" class="view active">
 
-    <!-- Quitamos botón MENÚ (redundante) -->
     <div class="top-actions">
-      <button class="chip" id="btn-refresh">Actualizar</button>
+      <!-- ✅ Quitado "Actualizar" -->
       <button class="chip danger" id="btn-clear">Limpiar</button>
     </div>
 
@@ -240,10 +238,10 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
       <input id="usuario" type="text" placeholder="Ej: BOTHEART" value="BOTHEART" />
 
       <label>Buscar</label>
-      <input id="q" type="text" placeholder="Nombre / presentación / ID..." />
+      <input id="q" type="text" placeholder="Nombre / presentación / ID / ubicación / categoría..." />
 
       <p class="muted center" style="margin:10px 0 0;">
-        Semáforo: <b>AGOTADO 0–2</b> / <b>INGRESAR MÁS 3–5</b> / <b>ESTABLE 6–15</b> / <b>SURTIDO >15</b>
+        Semáforo: <b>AGOTADO 0–2</b> / <b>INGRESAR MÁS 3–5</b> / <b>ESTABLE 6–15</b> / <b>SURTIDO &gt;15</b>
       </p>
 
       <div class="image-center">
@@ -253,7 +251,6 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
     </div>
 
     <div class="list" id="list"></div>
-
   </section>
 </div>
 
@@ -261,17 +258,49 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 /* ================== CONFIG ================== */
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyX5lyzwDKN6XdojWUcZdnWDfXFpf0OIATBkGsI-of0uijcAUwlQNlRXFfCWH360PkYjA/exec';
 
-/* ================== Loader (smart delay) ================== */
+/* ================== CATEGORÍAS (mostrar descripción, guardar solo nombre) ================== */
+const CATEGORIES = [
+  { name:'Analgésicos', desc:'Alivio del dolor.' },
+  { name:'Antipiréticos', desc:'Reducción de la fiebre.' },
+  { name:'Antiinflamatorios', desc:'Reducción de la inflamación.' },
+  { name:'Antibióticos', desc:'Contra infecciones bacterianas.' },
+  { name:'Antivirales', desc:'Contra infecciones por virus.' },
+  { name:'Antifúngicos (Antimicóticos)', desc:'Contra hongos.' },
+  { name:'Antiparasitarios', desc:'Contra parásitos.' },
+  { name:'Antihistamínicos', desc:'Contra reacciones alérgicas.' },
+  { name:'Antihipertensivos', desc:'Control de la presión arterial.' },
+  { name:'Hipoglucemiantes / Antidiabéticos', desc:'Control de la glucosa.' },
+  { name:'Gastrointestinales', desc:'Antiácidos, antiulcerosos, laxantes y antidiarreicos.' },
+  { name:'Antitusígenos y Expectorantes', desc:'Para la tos y flemas.' },
+  { name:'Antidepresivos y Ansiolíticos', desc:'Salud mental y sistema nervioso.' },
+  { name:'Anticoagulantes', desc:'Prevención de coágulos.' },
+  { name:'Diuréticos', desc:'Eliminación de líquidos.' },
+  { name:'Hormonales', desc:'Anticonceptivos, corticoides o tiroideos.' },
+  { name:'Material de Curación', desc:'Gasas, vendas, apósitos, algodones y cintas adhesivas.' },
+  { name:'Material Quirúrgico', desc:'Bisturís, suturas, guantes estériles y campos quirúrgicos.' },
+  { name:'Dispositivos de Inyección y Punción', desc:'Jeringas, agujas, catéteres y equipos de venoclisis.' },
+  { name:'Equipo Biomédico', desc:'Monitores, tensiómetros, glucómetros y termómetros.' },
+  { name:'Agentes de Diagnóstico', desc:'Pruebas rápidas, reactivos y medios de contraste.' },
+  { name:'Insumos Higiénicos y de Protección', desc:'Mascarillas, batas desechables, caretas y antisépticos (alcohol, gel).' },
+  { name:'Ayudas Funcionales y Prótesis', desc:'Sillas de ruedas, muletas, andaderas e implantes.' },
+  { name:'Insumos Odontológicos', desc:'Resinas, amalgamas y materiales de impresión dental.' }
+];
+const CAT_DESC = new Map(CATEGORIES.map(c => [c.name, c.desc]));
+function catLabel(name){
+  const n = String(name || '').trim();
+  if(!n) return '—';
+  const d = CAT_DESC.get(n);
+  return d ? `${n}: ${d}` : n;
+}
+
+/* ================== Loader ================== */
 const loader = document.getElementById('loader');
 let loadingCount = 0;
 let loaderTimer = null;
 function startLoading(){
   loadingCount++;
   if(loadingCount === 1){
-    loaderTimer = setTimeout(()=>{
-      loader.classList.remove('hidden');
-      loaderTimer = null;
-    }, 120);
+    loaderTimer = setTimeout(()=>{ loader.classList.remove('hidden'); loaderTimer = null; }, 120);
   }
 }
 function stopLoading(){
@@ -293,13 +322,8 @@ const SOUNDS = {
   back: 'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Keyboard_Enter_b9k2dc.mp3'
 };
 function playSoundOnce(url){
-  try{
-    const a = new Audio(url);
-    a.preload = 'auto';
-    a.play().catch(()=>{});
-  }catch(_){}
+  try{ const a = new Audio(url); a.preload='auto'; a.play().catch(()=>{}); }catch(_){}
 }
-/* Patch SweetAlert2 para sonido por icono */
 if(window.Swal && typeof Swal.fire === 'function'){
   const __fire = Swal.fire.bind(Swal);
   Swal.fire = function(options = {}, ...rest){
@@ -311,7 +335,7 @@ if(window.Swal && typeof Swal.fire === 'function'){
   }
 }
 
-/* ================== API Helpers ================== */
+/* ================== API ================== */
 async function apiGet(action, params = {}){
   startLoading();
   try{
@@ -338,16 +362,25 @@ async function apiPost(action, body = {}){
   } finally { stopLoading(); }
 }
 
+/* ================== Estado por stock (corrige inconsistencia) ================== */
+function estadoPorStock(stock){
+  const s = Number(stock ?? 0);
+  if(s <= 2) return { label:'AGOTADO', cls:'agotado' };
+  if(s <= 5) return { label:'INGRESAR MÁS', cls:'ingresar' };
+  if(s <= 15) return { label:'ESTABLE', cls:'estable' };
+  return { label:'SURTIDO', cls:'surtido' };
+}
+
 /* ================== UI ================== */
 let STOCK_CACHE = [];
 
-function mapEstado(estadoRaw){
-  // desde GS debe venir ya como: AGOTADO / INGRESAR MÁS / ESTABLE / SURTIDO
-  const e = String(estadoRaw || '').trim().toUpperCase();
-  if(e === 'SURTIDO') return { label:'SURTIDO', cls:'surtido' };
-  if(e === 'ESTABLE') return { label:'ESTABLE', cls:'estable' };
-  if(e === 'INGRESAR MÁS' || e === 'INGRESAR MAS') return { label:'INGRESAR MÁS', cls:'ingresar' };
-  return { label:'AGOTADO', cls:'agotado' };
+function escapeHtml(str){
+  return String(str ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
 }
 
 function render(items){
@@ -379,22 +412,22 @@ function render(items){
 
     const meta = document.createElement('p');
     meta.className = 'item-meta';
-    const dv = (it.dias_para_vencer === '' || it.dias_para_vencer === null) ? '—' : it.dias_para_vencer;
 
-    // ✅ agregado: Ubicación y Categoría debajo de ID y antes de Vence:
+    const dv = (it.dias_para_vencer === '' || it.dias_para_vencer === null) ? '—' : it.dias_para_vencer;
     const ubic = it.ubicacion ? String(it.ubicacion) : '—';
-    const cat  = it.categoria ? String(it.categoria) : '—';
+    const catName = it.categoria ? String(it.categoria) : '';
 
     meta.innerHTML =
       `<b>Ubicación:</b> ${escapeHtml(ubic)}<br>` +
-      `<b>Categoría:</b> ${escapeHtml(cat)}<br>` +
+      `<b>Categoría:</b> ${escapeHtml(catLabel(catName))}<br>` +
       `Vence: ${escapeHtml(it.fecha_vencimiento || '—')} | Días: ${escapeHtml(String(dv))} | Últ mov: ${escapeHtml(it.ult_mov || '—')}`;
 
     main.appendChild(t);
     main.appendChild(sub);
     main.appendChild(meta);
 
-    const est = mapEstado(it.estado_color);
+    // ✅ Badge ahora se calcula por stock (no depende de texto del backend)
+    const est = estadoPorStock(it.stock);
     const badge = document.createElement('div');
     badge.className = 'badge ' + est.cls;
     badge.textContent = est.label;
@@ -433,13 +466,11 @@ function isDDMMYYYY(s){
   return /^(\d{2})\/(\d{2})\/(\d{4})$/.test(String(s||'').trim());
 }
 
-function escapeHtml(str){
-  return String(str ?? '')
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'","&#039;");
+function categoryOptionsHtml(){
+  return CATEGORIES.map(c => {
+    const label = `${c.name}: ${c.desc}`;
+    return `<option value="${escapeHtml(c.name)}">${escapeHtml(label)}</option>`;
+  }).join('');
 }
 
 async function nuevoMedicamento(){
@@ -453,12 +484,14 @@ async function nuevoMedicamento(){
       <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Presentación</label>
       <input id="m-pres" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: Tableta 500 mg" />
 
-      <!-- ✅ cambio: UNIDAD -> UBICACIÓN -->
       <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Ubicación</label>
       <input id="m-ubic" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ejemplo: Instante Principal Bloque A" />
 
       <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Categoría</label>
-      <input id="m-cat" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Ej: Analgésico" />
+      <select id="m-cat" class="swal2-select" style="width:100%; margin:0; padding:12px; border-radius:10px; border:2px solid #111;">
+        <option value="" disabled selected>Selecciona una categoría</option>
+        ${categoryOptionsHtml()}
+      </select>
 
       <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Fecha de vencimiento (dd/mm/yyyy)</label>
       <input id="m-v" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="31/12/2026" />
@@ -470,7 +503,7 @@ async function nuevoMedicamento(){
       const nombre = (document.getElementById('m-nombre').value || '').trim();
       const presentacion = (document.getElementById('m-pres').value || '').trim();
       const ubicacion = (document.getElementById('m-ubic').value || '').trim();
-      const categoria = (document.getElementById('m-cat').value || '').trim();
+      const categoria = (document.getElementById('m-cat').value || '').trim(); // ✅ solo nombre
       const fecha_vencimiento = (document.getElementById('m-v').value || '').trim();
 
       if(!nombre) return Swal.showValidationMessage('Nombre requerido');
@@ -543,7 +576,6 @@ document.getElementById('btn-cargar').addEventListener('click', ()=> loadStock()
 document.getElementById('btn-nuevo').addEventListener('click', ()=> nuevoMedicamento().catch(e=>{
   Swal.fire({ icon:'error', title:'Error', text:e.message });
 }));
-document.getElementById('btn-refresh').addEventListener('click', ()=> loadStock().catch(()=>{}));
 document.getElementById('btn-clear').addEventListener('click', ()=>{
   playSoundOnce(SOUNDS.back);
   document.getElementById('q').value = '';
