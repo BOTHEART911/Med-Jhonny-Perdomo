@@ -30,20 +30,29 @@ html,body{
 
 .container{ max-width: 1100px; margin: 0 auto; padding: 16px; }
 
-.view{ display:none; opacity:0; transform: translateY(8px);
+/* Vistas con transición (like indexref) */
+.view{
+  display:none;
+  opacity:0;
+  transform: translateY(8px);
   transition: opacity .25s ease, transform .25s ease;
-  box-sizing:border-box; padding: 0 16px;
+  box-sizing:border-box;
+  padding: 0 16px;
 }
 .view.active{ display:block; opacity:1; transform: translateY(0); }
 
+/* Tarjetas */
 .card{
   background: rgba(255,255,255,.06);
   backdrop-filter: blur(3px);
-  border: 2px solid #ddd; border-radius: 10px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
   box-shadow: 0 8px 18px rgba(0,0,0,.15);
-  margin: 16px auto; padding: 16px 16px 10px 16px;
+  margin: 16px auto;
+  padding: 16px 16px 10px 16px;
 }
 .card.narrow{ max-width: 760px; }
+.card.login{ max-width: 420px; }
 
 h1,h2{ margin: 8px 0 12px; text-align:center; }
 p.helper{ color:#666; font-size:.95rem; text-align:center; margin:8px 0 16px; }
@@ -54,35 +63,67 @@ p.helper{ color:#666; font-size:.95rem; text-align:center; margin:8px 0 16px; }
 label{ display:block; font-weight:800; margin: 10px 0 6px; color:var(--primary); }
 
 input, select, textarea, button{
-  width:100%; padding:12px; box-sizing:border-box;
-  border:1.5px solid #ccc; border-radius:8px; background:#fff;
-  outline:none; transition: border-color .2s ease, transform .08s ease;
+  width:100%;
+  padding:12px;
+  box-sizing:border-box;
+  border:1.5px solid #ccc;
+  border-radius:8px;
+  background:#fff;
+  outline:none;
+  transition: border-color .2s ease, transform .08s ease;
   font-size:16px;
 }
 input:focus, select:focus, textarea:focus{ border-color:var(--primary); }
 
 button{
-  cursor:pointer; border:2px solid var(--primary);
-  background:#fff; color:#000; font-weight:900;
+  cursor:pointer;
+  border:2px solid var(--primary);
+  background:#fff;
+  color:#000;
+  font-weight:900;
 }
 button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primary-2); }
 .btn-primary{ background:var(--primary); color:#fff; border-color:var(--primary); }
+
 .btn-row{ display:flex; gap:12px; }
 .btn-row > *{ flex:1; }
 @media (max-width: 700px){ .btn-row{ flex-direction:column; } }
 
 .chip{
-  padding:8px 12px; border-radius:999px; border:2px solid var(--primary);
-  background:#fff; font-weight:900; color:#000;
+  padding:8px 12px;
+  border-radius:999px;
+  border:2px solid var(--primary);
+  background:#fff;
+  font-weight:900;
+  color:#000;
 }
 .danger{ background:#e11; border-color:#e11; color:#fff; }
 
+/* Barra de acciones arriba, centrada y pequeña */
+.top-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;   /* centrado (requerido) */
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.top-actions .chip{
+  width:auto;               /* pequeños */
+  padding:6px 10px;
+  font-size:.9rem;
+  border-width:2px;
+}
+
+/* Loader */
 .loader{
   position:fixed; inset:0;
   display:flex; align-items:center; justify-content:center;
   background:rgba(0,0,0,.35);
-  z-index:9999; backdrop-filter: blur(2px);
-  opacity:1; transition: opacity .12s ease;
+  z-index:9999;
+  backdrop-filter: blur(2px);
+  opacity:1;
+  transition: opacity .12s ease;
   will-change: opacity;
 }
 .loader.hidden{ display:flex !important; opacity:0; pointer-events:none; }
@@ -112,6 +153,7 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
 
 .hidden{ display:none !important; }
 
+/* Lista stock */
 .list{
   max-width: 980px;
   margin: 0 auto;
@@ -119,6 +161,7 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   flex-direction:column;
   gap:12px;
 }
+
 .item{
   background: rgba(255,255,255,.92);
   border:2px solid #ddd;
@@ -179,14 +222,28 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   font-size:1rem;
 }
 
-.top-actions{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  justify-content:flex-end;
-  flex-wrap:wrap;
-  margin-bottom:12px;
+/* Responsive cards list */
+@media (max-width: 860px){
+  .item{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .badge{
+    min-width:0;
+    width:100%;
+    box-sizing:border-box;
+  }
+  .item-actions{
+    min-width:0;
+    width:100%;
+    flex-direction:row;
+    flex-wrap:wrap;
+  }
+  .item-actions button{
+    flex:1 1 140px;
+  }
 }
+
 .brand{
   width:210px;
   border-radius:8px;
@@ -194,36 +251,60 @@ button:hover{ background:var(--primary-2); color:#fff; border-color:var(--primar
   margin:12px auto 4px;
 }
 
-/* modal date (copiado de indexref) */
+/* modal date */
 .picker-modal-cal{ position:fixed; inset:0; display:none; align-items:flex-start; justify-content:center; padding-top:32px; background:rgba(0,0,0,.5); z-index:9999; }
 .picker-box-cal{ width:90%; max-width:520px; background:#fff; border-radius:8px; padding:16px; box-shadow:0 8px 18px rgba(0,0,0,.18); }
 .picker-grid-cal{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:12px 0; }
 .picker-grid-cal select{ width:100%; height:180px; }
 
-/* --- AÑADIR: centrar select y opciones (cross-browser) --- */
-/* Aplica al select dentro de SweetAlert y al select normal */
+/* ✅ Centrar select y opciones (incluye SweetAlert) */
 .swal2-container .swal2-select,
 .swal2-container .swal2-select option,
 select.swal2-select,
-select {
-  text-align: center; /* centra el valor visible */
+select{
+  text-align:center;
 }
 
 /* Firefox */
-select {
-  -moz-text-align-last: center;
+select{
+  -moz-text-align-last:center;
 }
 
-/* Chrome, Edge, Safari */
-select {
-  -webkit-text-align-last: center;
-  text-align-last: center;
+/* Chrome/Edge/Safari */
+select{
+  -webkit-text-align-last:center;
+  text-align-last:center;
 }
 
-/* Forzar también las opciones (algunos navegadores ignoran, pero ayuda) */
+/* Opciones */
 .swal2-container .swal2-select option,
-select option {
-  text-align: center;
+select option{
+  text-align:center;
+}
+
+/* Login: input tipo documento */
+.pwd-wrapper{ position:relative; width:100%; }
+.pwd-wrapper input#doc-login{ display:block; width:100%; box-sizing:border-box; padding-right:40px; }
+.toggle-cedula{
+  position:absolute;
+  top:50%;
+  right:10px;
+  transform:translateY(-50%);
+  background:transparent !important;
+  border:0 !important;
+  padding:0;
+  width:28px; height:28px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  border-radius:6px;
+}
+.toggle-cedula:hover{ background:rgba(0,0,0,.06); }
+.toggle-cedula:active{ transform:translateY(-50%) scale(.92); }
+.toggle-cedula img{ width:22px; height:22px; display:block; pointer-events:none; }
+@media (max-width:480px){
+  .pwd-wrapper input#doc-login{ padding-right:36px; }
+  .toggle-cedula{ right:8px; width:26px; height:26px; }
+  .toggle-cedula img{ width:20px; height:20px; }
 }
 </style>
 </head>
@@ -237,9 +318,40 @@ select option {
 </div>
 
 <div class="container">
-  <section id="view-main" class="view active">
+
+  <!-- VISTA LOGIN -->
+  <section id="view-login" class="view active">
+    <div class="card login">
+      <h1 style="color:var(--primary); text-shadow: 0 2px 2px #031732;">Ingreso a Stock</h1>
+      <p class="helper"><b>Ingresa tu Documento para validar acceso.</b></p>
+
+      <label>Documento:</label>
+      <div class="pwd-wrapper">
+        <input
+          id="doc-login"
+          type="tel"
+          inputmode="numeric"
+          placeholder="Sin puntos ni espacios"
+        />
+        <button type="button" id="toggle-doc-login" aria-label="Mostrar documento" class="toggle-cedula">
+          <img src="https://res.cloudinary.com/dqqeavica/image/upload/v1764084782/Mostrar_yymceh.png" alt="Mostrar">
+        </button>
+      </div>
+
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn-primary" id="btn-login">Ingresar</button>
+      </div>
+
+      <img class="brand" alt="Brand" src="https://res.cloudinary.com/dqqeavica/image/upload/v1753538919/BANNER_JHONNY_e0yw7m.png" />
+      <p class="center muted">Copyright © BOTHEART</p>
+    </div>
+  </section>
+
+  <!-- VISTA MAIN -->
+  <section id="view-main" class="view">
     <div class="top-actions">
-      <button class="chip danger" id="btn-clear">Limpiar</button>
+      <button class="chip" id="btn-hide">Ocultar Stock</button>
+      <button class="chip danger" id="btn-logout">Cerrar Sesión</button>
     </div>
 
     <div class="card narrow">
@@ -252,7 +364,7 @@ select option {
       </div>
 
       <label style="margin-top:14px;">Usuario (para movimientos)</label>
-      <input id="usuario" type="text" placeholder="Escríbe tu nombre" />
+      <input id="usuario" type="text" readonly />
 
       <label>Buscar</label>
       <input id="q" type="text" placeholder="Nombre / presentación / ID / ubicación / categoría..." />
@@ -269,6 +381,7 @@ select option {
 
     <div class="list" id="list"></div>
   </section>
+
 </div>
 
 <!-- Date picker modal (reusable para add/edit) -->
@@ -299,6 +412,153 @@ select option {
 <script>
 /* ================== CONFIG ================== */
 const API_BASE = 'https://script.google.com/macros/s/AKfycbyX5lyzwDKN6XdojWUcZdnWDfXFpf0OIATBkGsI-of0uijcAUwlQNlRXFfCWH360PkYjA/exec';
+
+/* ================== Estado sesión ================== */
+let CURRENT_USER = null; // { documento, nombre }
+
+/* ================== Loader ================== */
+const loader = document.getElementById('loader');
+let loadingCount = 0;
+let loaderTimer = null;
+function startLoading(){ loadingCount++; if(loadingCount===1){ loaderTimer=setTimeout(()=>{ loader.classList.remove('hidden'); loaderTimer=null; },120); } }
+function stopLoading(){ if(loadingCount===0) return; loadingCount--; if(loadingCount===0){ if(loaderTimer){ clearTimeout(loaderTimer); loaderTimer=null; } loader.classList.add('hidden'); } }
+
+/* ================== Sounds / Swal patch ================== */
+const SOUNDS = {
+  question:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_fail_ls2aif.mp3',
+  info:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Default_notification_pkp4wr.mp3',
+  success:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_success_t5aawh.mp3',
+  error:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
+  warning:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
+  back:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Keyboard_Enter_b9k2dc.mp3',
+  login:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Siri_star_g1owy4.mp3',
+  logout:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Siri_End_kelv02.mp3'
+};
+function playSoundOnce(url){ try{ const a=new Audio(url); a.preload='auto'; a.play().catch(()=>{}); }catch(_){ } }
+if(window.Swal && typeof Swal.fire==='function'){
+  const __fire = Swal.fire.bind(Swal);
+  Swal.fire = function(options={},...rest){
+    try{
+      const icon = options.icon || options.type;
+      if(icon && SOUNDS[icon]) playSoundOnce(SOUNDS[icon]);
+    }catch(_){}
+    return __fire(options,...rest);
+  };
+}
+
+/* ================== Helpers vistas ================== */
+function showView(id){
+  for(const el of document.querySelectorAll('.view')) el.classList.remove('active');
+  const target = document.getElementById(id);
+  if(target) target.classList.add('active');
+  // scroll top suave
+  try{ window.scrollTo({ top:0, behavior:'smooth' }); }catch(_){}
+}
+
+/* ================== API helpers ================== */
+async function apiGet(action, params={}){
+  startLoading();
+  try{
+    const url=new URL(API_BASE);
+    url.search=new URLSearchParams({ action, ...params }).toString();
+    const r=await fetch(url.toString(),{method:'GET'});
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error||'Error');
+    return j.data;
+  } finally { stopLoading(); }
+}
+async function apiPost(action, body={}){
+  startLoading();
+  try{
+    const url = API_BASE + '?action=' + encodeURIComponent(action);
+    const r = await fetch(url, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error||'Error');
+    return j.data;
+  } finally { stopLoading(); }
+}
+
+/* ================== Login UI ================== */
+(function initDocToggle(){
+  const toggleBtn = document.getElementById('toggle-doc-login');
+  const input = document.getElementById('doc-login');
+  if(!toggleBtn || !input) return;
+
+  function syncUI(){
+    const visible = input.type !== 'password';
+    const icono = visible
+      ? 'https://res.cloudinary.com/dqqeavica/image/upload/v1764084782/Ocultar_lgdxpd.png'
+      : 'https://res.cloudinary.com/dqqeavica/image/upload/v1764084782/Mostrar_yymceh.png';
+    const accion = visible ? 'Ocultar' : 'Mostrar';
+    toggleBtn.setAttribute('aria-label', accion + ' documento');
+    toggleBtn.innerHTML = '<img src="'+icono+'" alt="'+accion+'">';
+  }
+
+  input.type = 'tel';
+  syncUI();
+
+  toggleBtn.addEventListener('click', ()=>{
+    const visible = input.type !== 'password';
+    input.type = visible ? 'password' : 'tel';
+    syncUI();
+  });
+})();
+
+document.getElementById('btn-login').addEventListener('click', async ()=>{
+  const documento = (document.getElementById('doc-login').value || '').trim();
+
+  if(!documento){
+    await Swal.fire({ icon:'question', title:'¿Deseas comenzar?', text:'Ingresa un Documento para validar.' });
+    return;
+  }
+  if(!/^\d{6,10}$/.test(documento)){
+    await Swal.fire({ icon:'warning', title:'Documento inválido', text:'El Documento debe tener de 6 a 10 dígitos SIN PUNTOS NI ESPACIOS' });
+    return;
+  }
+
+  try{
+    const res = await apiGet('loginfast', { documento });
+
+    if(!res || !res.existe){
+      await Swal.fire({
+        icon:'error',
+        title:'No tienes Acceso',
+        text:'Escribe en el grupo para solicitarlo.'
+      });
+      return;
+    }
+
+    CURRENT_USER = { documento, nombre: res.nombre || '' };
+    document.getElementById('usuario').value = CURRENT_USER.nombre || '—';
+    // input usuario queda readonly siempre
+
+    playSoundOnce(SOUNDS.login);
+    showView('view-main');
+
+    // opcional: limpiar UI stock al entrar
+    document.getElementById('q').value = '';
+    document.getElementById('list').innerHTML = '';
+  }catch(e){
+    await Swal.fire({ icon:'error', title:'Error', text:String(e.message||e) });
+  }
+});
+
+document.getElementById('btn-logout').addEventListener('click', async ()=>{
+  playSoundOnce(SOUNDS.logout);
+  CURRENT_USER = null;
+  document.getElementById('doc-login').value = '';
+  document.getElementById('usuario').value = '';
+  document.getElementById('q').value = '';
+  document.getElementById('list').innerHTML = '';
+  showView('view-login');
+});
+
+document.getElementById('btn-hide').addEventListener('click', ()=>{
+  playSoundOnce(SOUNDS.back);
+  document.getElementById('q').value = '';
+  document.getElementById('list').innerHTML = '';
+  // mantiene sesión, solo oculta listado
+});
 
 /* ================== CATEGORIES ================== */
 const CATEGORIES = [
@@ -335,34 +595,6 @@ function catLabel(name){
   return d ? `${n}: ${d}` : n;
 }
 
-/* ================== Loader ================== */
-const loader = document.getElementById('loader');
-let loadingCount = 0;
-let loaderTimer = null;
-function startLoading(){ loadingCount++; if(loadingCount===1){ loaderTimer = setTimeout(()=>{ loader.classList.remove('hidden'); loaderTimer=null; },120); } }
-function stopLoading(){ if(loadingCount===0) return; loadingCount--; if(loadingCount===0){ if(loaderTimer){ clearTimeout(loaderTimer); loaderTimer=null; } loader.classList.add('hidden'); } }
-
-/* ================== Sounds / Swal patch ================== */
-const SOUNDS = {
-  question:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_fail_ls2aif.mp3',
-  info:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Default_notification_pkp4wr.mp3',
-  success:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011577/Pay_success_t5aawh.mp3',
-  error:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
-  warning:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Low_battery_d5qua1.mp3',
-  back:'https://res.cloudinary.com/dqqeavica/video/upload/v1759011578/Keyboard_Enter_b9k2dc.mp3'
-};
-function playSoundOnce(url){ try{ const a=new Audio(url); a.preload='auto'; a.play().catch(()=>{}); }catch(_){ } }
-if(window.Swal && typeof Swal.fire==='function'){
-  const __fire = Swal.fire.bind(Swal);
-  Swal.fire = function(options={},...rest){ try{ const icon = options.icon || options.type; if(icon && SOUNDS[icon]) playSoundOnce(SOUNDS[icon]); }catch(_){}
-    return __fire(options,...rest);
-  };
-}
-
-/* ================== API helpers ================== */
-async function apiGet(action, params={}){ startLoading(); try{ const url=new URL(API_BASE); url.search=new URLSearchParams({ action, ...params }).toString(); const r=await fetch(url.toString(),{method:'GET'}); const j=await r.json(); if(!j.ok) throw new Error(j.error||'Error'); return j.data; } finally{ stopLoading(); } }
-async function apiPost(action, body={}){ startLoading(); try{ const url = API_BASE + '?action=' + encodeURIComponent(action); const r = await fetch(url, { method:'POST', headers:{ 'Content-Type':'text/plain;charset=utf-8' }, body: JSON.stringify(body) }); const j = await r.json(); if(!j.ok) throw new Error(j.error||'Error'); return j.data; } finally{ stopLoading(); } }
-
 /* ================== Estado por stock ================== */
 function estadoPorStock(stock){
   const s = Number(stock ?? 0);
@@ -373,38 +605,85 @@ function estadoPorStock(stock){
 }
 
 /* ================== Render listado ================== */
-function escapeHtml(str){ return String(str||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#039;"); }
+function escapeHtml(str){
+  return String(str||'')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
+}
 
 function render(items){
   const wrap = document.getElementById('list');
   wrap.innerHTML='';
-  if(!items.length){ const p=document.createElement('p'); p.className='muted center'; p.textContent='No hay medicamentos para mostrar.'; wrap.appendChild(p); return; }
+  if(!items.length){
+    const p=document.createElement('p');
+    p.className='muted center';
+    p.textContent='No hay medicamentos para mostrar.';
+    wrap.appendChild(p);
+    return;
+  }
   items.forEach(it=>{
     const row=document.createElement('div'); row.className='item';
     const main=document.createElement('div'); main.className='item-main';
-    const t=document.createElement('p'); t.className='item-title'; t.textContent=(it.nombre||'') + (it.presentacion?(' — '+it.presentacion):'');
-    const sub=document.createElement('p'); sub.className='item-sub'; sub.textContent=`ID: ${it.id_med} | Stock: ${it.stock}`;
-    const meta=document.createElement('p'); meta.className='item-meta';
+
+    const t=document.createElement('p');
+    t.className='item-title';
+    t.textContent=(it.nombre||'') + (it.presentacion?(' — '+it.presentacion):'');
+
+    const sub=document.createElement('p');
+    sub.className='item-sub';
+    sub.textContent=`ID: ${it.id_med} | Stock: ${it.stock}`;
+
+    const meta=document.createElement('p');
+    meta.className='item-meta';
     const dv = (it.dias_para_vencer==='' || it.dias_para_vencer===null)?'—':it.dias_para_vencer;
     const ubic = it.ubicacion||'—';
     meta.innerHTML = `<b>Ubicación:</b> ${escapeHtml(ubic)}<br><b>Categoría:</b> ${escapeHtml(catLabel(it.categoria))}<br>Vence: ${escapeHtml(it.fecha_vencimiento||'—')} | Días: ${escapeHtml(String(dv))} | Últ mov: ${escapeHtml(it.ult_mov||'—')}`;
+
     main.appendChild(t); main.appendChild(sub); main.appendChild(meta);
+
     const est = estadoPorStock(it.stock);
-    const badge=document.createElement('div'); badge.className='badge '+est.cls; badge.textContent=est.label;
-    const actions=document.createElement('div'); actions.className='item-actions';
-    const bIn=document.createElement('button'); bIn.className='btn-primary'; bIn.textContent='+ Entrada'; bIn.addEventListener('click', ()=> movimiento(it.id_med,'ENTRADA'));
-    const bOut=document.createElement('button'); bOut.textContent='- Salida'; bOut.addEventListener('click', ()=> movimiento(it.id_med,'SALIDA'));
-    // ✅ Edit button
-    const bEdit=document.createElement('button'); bEdit.textContent='Editar'; bEdit.addEventListener('click', ()=> editarMedicamento(it.id_med));
-    actions.appendChild(bIn); actions.appendChild(bOut); actions.appendChild(bEdit);
-    row.appendChild(main); row.appendChild(badge); row.appendChild(actions);
+    const badge=document.createElement('div');
+    badge.className='badge '+est.cls;
+    badge.textContent=est.label;
+
+    const actions=document.createElement('div');
+    actions.className='item-actions';
+
+    const bIn=document.createElement('button');
+    bIn.className='btn-primary';
+    bIn.textContent='+ Entrada';
+    bIn.addEventListener('click', ()=> movimiento(it.id_med,'ENTRADA'));
+
+    const bOut=document.createElement('button');
+    bOut.textContent='- Salida';
+    bOut.addEventListener('click', ()=> movimiento(it.id_med,'SALIDA'));
+
+    const bEdit=document.createElement('button');
+    bEdit.textContent='Editar';
+    bEdit.addEventListener('click', ()=> editarMedicamento(it.id_med));
+
+    actions.appendChild(bIn);
+    actions.appendChild(bOut);
+    actions.appendChild(bEdit);
+
+    row.appendChild(main);
+    row.appendChild(badge);
+    row.appendChild(actions);
     wrap.appendChild(row);
   });
 }
 
 /* ================== Load stock ================== */
 let STOCK_CACHE = [];
-async function loadStock(){ const q=(document.getElementById('q').value||'').trim(); const data = await apiGet('listStock', q?{query:q}:{}); STOCK_CACHE = Array.isArray(data)?data:[]; render(STOCK_CACHE); }
+async function loadStock(){
+  const q=(document.getElementById('q').value||'').trim();
+  const data = await apiGet('listStock', q?{query:q}:{});
+  STOCK_CACHE = Array.isArray(data)?data:[];
+  render(STOCK_CACHE);
+}
 
 /* ================== Categories select html helper ================== */
 function categoryOptionsHtml(selectedName){
@@ -415,7 +694,7 @@ function categoryOptionsHtml(selectedName){
   }).join('');
 }
 
-/* ================== Date modal (copiado / adaptado) ================== */
+/* ================== Date modal ================== */
 function calPad2(n){ return String(n).padStart(2,'0'); }
 function calInitSimplePicker(){
   const dSel=document.getElementById('evtDia'), mSel=document.getElementById('evtMes'), aSel=document.getElementById('evtAnio');
@@ -447,27 +726,31 @@ function showDatePicker(targetInputId, initialValue){
   modal.setAttribute('aria-hidden','false');
 }
 document.getElementById('evtFechaCancelar').addEventListener('click', ()=>{
-  const modal=document.getElementById('eventoFechaModal'); modal.style.display='none'; modal.setAttribute('aria-hidden','true'); dateModalTargetInputId=null;
+  const modal=document.getElementById('eventoFechaModal');
+  modal.style.display='none';
+  modal.setAttribute('aria-hidden','true');
+  dateModalTargetInputId=null;
 });
 document.getElementById('evtFechaOk').addEventListener('click', ()=>{
   const d=document.getElementById('evtDia').value, m=document.getElementById('evtMes').value, y=document.getElementById('evtAnio').value;
   const val = `${d}/${m}/${y}`;
   if(dateModalTargetInputId){
-    // may be inside sweetalert, so querySelector in document
     const el = document.getElementById(dateModalTargetInputId);
     if(el) el.value = val;
     else {
-      // try inside swal modal (swal creates its own DOM)
       const swalEl = document.querySelector('.swal2-container #' + dateModalTargetInputId);
       if(swalEl) swalEl.value = val;
     }
   }
-  const modal=document.getElementById('eventoFechaModal'); modal.style.display='none'; modal.setAttribute('aria-hidden','true'); dateModalTargetInputId=null;
+  const modal=document.getElementById('eventoFechaModal');
+  modal.style.display='none';
+  modal.setAttribute('aria-hidden','true');
+  dateModalTargetInputId=null;
 });
 
-/* ================== Add / Edit Medicamento ================== */
 function isDDMMYYYY(s){ return /^\d{2}\/\d{2}\/\d{4}$/.test(String(s||'').trim()); }
 
+/* ================== Add / Edit Medicamento ================== */
 async function nuevoMedicamento(){
   const html = `
     <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:0 0 6px;">Nombre</label>
@@ -566,7 +849,7 @@ async function editarMedicamento(id_med){
     if(!v) return;
 
     const body = Object.assign({ id_med }, v);
-    const res = await apiPost('updatemedicamento', body);
+    await apiPost('updatemedicamento', body);
     await Swal.fire({ icon:'success', title:'Guardado', timer:1400, showConfirmButton:false });
     await apiPost('rebuildstock', {});
     await loadStock();
@@ -577,7 +860,14 @@ async function editarMedicamento(id_med){
 
 /* ================== Movimiento (Entrada/Salida) ================== */
 async function movimiento(id_med, tipo){
-  const usuario = (document.getElementById('usuario').value||'').trim()||'WEB';
+  if(!CURRENT_USER || !CURRENT_USER.nombre){
+    await Swal.fire({ icon:'error', title:'Sesión requerida', text:'Vuelve a iniciar sesión.' });
+    showView('view-login');
+    return;
+  }
+
+  const usuario = CURRENT_USER.nombre; // ✅ fijo, no editable
+
   const { value: form } = await Swal.fire({
     icon:'question',
     title: (tipo==='ENTRADA'?'Entrada':'Salida') + ' - ' + id_med,
@@ -598,6 +888,7 @@ async function movimiento(id_med, tipo){
     }
   });
   if(!form) return;
+
   try{
     const r = await apiPost('movimiento',{ id_med, tipo, cantidad: form.cant, observacion: form.obs, usuario });
     await Swal.fire({ icon:'success', title:'Registrado', text:`Nuevo stock: ${r.stock} (${r.estado})`, timer:1500, showConfirmButton:false });
@@ -610,19 +901,13 @@ async function movimiento(id_med, tipo){
 /* ================== Buttons ================== */
 document.getElementById('btn-cargar').addEventListener('click', ()=> loadStock().catch(e=>Swal.fire({icon:'error',title:'Error',text:String(e.message||e)})));
 document.getElementById('btn-nuevo').addEventListener('click', ()=> nuevoMedicamento());
-document.getElementById('btn-clear').addEventListener('click', ()=>{ playSoundOnce(SOUNDS.back); document.getElementById('q').value=''; document.getElementById('list').innerHTML=''; });
 
 document.getElementById('q').addEventListener('input', () => {
-  // usa una variable con nombre claro para evitar colisiones
   clearTimeout(window.__qDebounceTimer);
-  // esperar 2500ms antes de ejecutar la búsqueda
   window.__qDebounceTimer = setTimeout(() => {
     loadStock().catch(()=>{});
   }, 2500);
 });
-
-/* ================== init ================== */
-window.addEventListener('load', ()=>{ loadStock().catch(()=>{}); });
 </script>
 </body>
 </html>
