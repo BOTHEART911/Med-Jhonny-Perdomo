@@ -872,11 +872,24 @@ async function movimiento(id_med, tipo){
     icon:'question',
     title: (tipo==='ENTRADA'?'Entrada':'Salida') + ' - ' + id_med,
     html: `
-      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:0 0 6px;">Cantidad</label>
-      <input id="mv-cant" type="number" min="1" step="1" class="swal2-input" style="width:100%; margin:0;" />
-      <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Observación</label>
-      <input id="mv-obs" type="text" class="swal2-input" style="width:100%; margin:0;" placeholder="Opcional" />
-    `,
+  <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:0 0 6px;">Cantidad</label>
+  <input id="mv-cant" type="number" min="1" step="1" class="swal2-input" style="width:100%; margin:0;" />
+
+  <label style="text-align:left; font-weight:900; color:#007BFF; display:block; margin:10px 0 6px;">Observación</label>
+
+  ${
+    (tipo === 'SALIDA')
+      ? `
+        <select id="mv-obs" class="swal2-select" style="width:100%; margin:0; padding:12px; border-radius:10px; border:2px solid #111;">
+          <option value="Con formula / Firma Consentimiento">Con formula / Firma Consentimiento</option>
+          <option value="Sin formula / Firma Consentimiento">Sin formula / Firma Consentimiento</option>
+        </select>
+      `
+      : `
+        <input id="mv-obs" type="text" class="swal2-input" style="width:100%; margin:0;" value="Donación" />
+      `
+  }
+`,
     showCancelButton:true,
     confirmButtonText:'Guardar',
     cancelButtonText:'Cancelar',
@@ -903,10 +916,22 @@ document.getElementById('btn-cargar').addEventListener('click', ()=> loadStock()
 document.getElementById('btn-nuevo').addEventListener('click', ()=> nuevoMedicamento());
 
 document.getElementById('q').addEventListener('input', () => {
-  clearTimeout(window.__qDebounceTimer);
-  window.__qDebounceTimer = setTimeout(() => {
-    loadStock().catch(()=>{});
-  }, 2500);
+  const q = (document.getElementById('q').value || '').trim().toLowerCase();
+
+  if (!q){
+    render(STOCK_CACHE);
+    return;
+  }
+
+  const filtered = STOCK_CACHE.filter(it => {
+    return String(it.id_med || '').toLowerCase().includes(q) ||
+           String(it.nombre || '').toLowerCase().includes(q) ||
+           String(it.presentacion || '').toLowerCase().includes(q) ||
+           String(it.ubicacion || '').toLowerCase().includes(q) ||
+           String(it.categoria || '').toLowerCase().includes(q);
+  });
+
+  render(filtered);
 });
 </script>
 </body>
